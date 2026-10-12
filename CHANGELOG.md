@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/chris-yyau/busdriver/compare/v2.8.0...v2.9.0) (2026-10-12)
+
+
+### Features
+
+* **dispatch-cli:** give dispatched grok read-only Claude Mem and Hindsight context ([#953](https://github.com/chris-yyau/busdriver/issues/953)) ([e0c6df0](https://github.com/chris-yyau/busdriver/commit/e0c6df0b3b44b4e9b278dc2c79ef140cdc864600)), closes [vectorize-io/hindsight#5467](https://github.com/vectorize-io/hindsight/issues/5467)
+
 # [2.8.0](https://github.com/chris-yyau/busdriver/compare/v2.7.0...v2.8.0) (2026-10-12)
 
 
