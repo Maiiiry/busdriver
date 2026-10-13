@@ -1,3 +1,10 @@
+## [2.9.2](https://github.com/chris-yyau/busdriver/compare/v2.9.1...v2.9.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **dispatch:** pipe the grok prompt instead of redirecting a HOME file ([#956](https://github.com/chris-yyau/busdriver/issues/956)) ([#959](https://github.com/chris-yyau/busdriver/issues/959)) ([da82a57](https://github.com/chris-yyau/busdriver/commit/da82a57b198a83bb1dc5fd1a1246172f7a45f9dd))
+
 ## [2.9.1](https://github.com/chris-yyau/busdriver/compare/v2.9.0...v2.9.1) (2026-10-13)
 
 
