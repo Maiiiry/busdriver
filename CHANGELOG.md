@@ -1,3 +1,10 @@
+## [2.9.1](https://github.com/chris-yyau/busdriver/compare/v2.9.0...v2.9.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **gates:** refuse a skip file whose mtime cannot be read ([#960](https://github.com/chris-yyau/busdriver/issues/960)) ([2bb6474](https://github.com/chris-yyau/busdriver/commit/2bb647453510cb8c605dc1ad58f2f352616459e1)), closes [#946](https://github.com/chris-yyau/busdriver/issues/946)
+
 # [2.9.0](https://github.com/chris-yyau/busdriver/compare/v2.8.0...v2.9.0) (2026-10-12)
 
 
