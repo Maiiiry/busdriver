@@ -1,3 +1,10 @@
+## [2.9.4](https://github.com/chris-yyau/busdriver/compare/v2.9.3...v2.9.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **needs-shipping:** structured agent config makes the import walk incomplete ([#950](https://github.com/chris-yyau/busdriver/issues/950)) ([#964](https://github.com/chris-yyau/busdriver/issues/964)) ([4b335fb](https://github.com/chris-yyau/busdriver/commit/4b335fb7bef6421818069ccc740c516cb93e604e))
+
 ## [2.9.3](https://github.com/chris-yyau/busdriver/compare/v2.9.2...v2.9.3) (2026-10-14)
 
 
