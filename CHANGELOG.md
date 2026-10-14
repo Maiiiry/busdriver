@@ -1,3 +1,10 @@
+## [2.9.6](https://github.com/chris-yyau/busdriver/compare/v2.9.5...v2.9.6) (2026-10-14)
+
+
+### Bug Fixes
+
+* **resolve-cli:** find the grok children when sourced from zsh ([#914](https://github.com/chris-yyau/busdriver/issues/914)) ([#966](https://github.com/chris-yyau/busdriver/issues/966)) ([53da431](https://github.com/chris-yyau/busdriver/commit/53da431e79fe5a521b2a579c99983ae535bf1a3e))
+
 ## [2.9.5](https://github.com/chris-yyau/busdriver/compare/v2.9.4...v2.9.5) (2026-10-14)
 
 
