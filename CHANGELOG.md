@@ -1,3 +1,10 @@
+## [2.9.3](https://github.com/chris-yyau/busdriver/compare/v2.9.2...v2.9.3) (2026-10-14)
+
+
+### Bug Fixes
+
+* **dispatch:** restore grok Hindsight pages after 0.8.1 and skip the Claude Mem summary ([#963](https://github.com/chris-yyau/busdriver/issues/963)) ([bedbf08](https://github.com/chris-yyau/busdriver/commit/bedbf08c6a35d4959472c05a6deaf39e88578943)), closes [vectorize-io/hindsight#5514](https://github.com/vectorize-io/hindsight/issues/5514) [thedotmack/claude-mem#4736](https://github.com/thedotmack/claude-mem/issues/4736) [#4734](https://github.com/chris-yyau/busdriver/issues/4734)
+
 ## [2.9.2](https://github.com/chris-yyau/busdriver/compare/v2.9.1...v2.9.2) (2026-10-13)
 
 
