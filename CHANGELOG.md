@@ -1,3 +1,10 @@
+## [2.9.7](https://github.com/chris-yyau/busdriver/compare/v2.9.6...v2.9.7) (2026-10-14)
+
+
+### Bug Fixes
+
+* **dispatch-cli:** renew or refuse an expiring grok login before review ([#882](https://github.com/chris-yyau/busdriver/issues/882)) ([#969](https://github.com/chris-yyau/busdriver/issues/969)) ([a8d6bc5](https://github.com/chris-yyau/busdriver/commit/a8d6bc5d9607d040135bb22050b2c54f3c6e7ef3))
+
 ## [2.9.6](https://github.com/chris-yyau/busdriver/compare/v2.9.5...v2.9.6) (2026-10-14)
 
 
