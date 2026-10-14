@@ -1,3 +1,10 @@
+## [2.9.8](https://github.com/chris-yyau/busdriver/compare/v2.9.7...v2.9.8) (2026-10-14)
+
+
+### Bug Fixes
+
+* **grok:** skip the session-token check for a model with its own key ([#971](https://github.com/chris-yyau/busdriver/issues/971)) ([1d3e372](https://github.com/chris-yyau/busdriver/commit/1d3e372ceea788ba7adce7e0c4f84be7051831cc)), closes [#882](https://github.com/chris-yyau/busdriver/issues/882) [#970](https://github.com/chris-yyau/busdriver/issues/970) [#970](https://github.com/chris-yyau/busdriver/issues/970)
+
 ## [2.9.7](https://github.com/chris-yyau/busdriver/compare/v2.9.6...v2.9.7) (2026-10-14)
 
 
