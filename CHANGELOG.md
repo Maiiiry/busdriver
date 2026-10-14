@@ -1,3 +1,10 @@
+## [2.9.5](https://github.com/chris-yyau/busdriver/compare/v2.9.4...v2.9.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* **tests:** clear inherited git repository env in two fixtures ([#961](https://github.com/chris-yyau/busdriver/issues/961)) ([#965](https://github.com/chris-yyau/busdriver/issues/965)) ([d0b3f89](https://github.com/chris-yyau/busdriver/commit/d0b3f89419d69d4db9ab2954901d2e8d406d45be)), closes [#890](https://github.com/chris-yyau/busdriver/issues/890) [#890](https://github.com/chris-yyau/busdriver/issues/890) [#890](https://github.com/chris-yyau/busdriver/issues/890)
+
 ## [2.9.4](https://github.com/chris-yyau/busdriver/compare/v2.9.3...v2.9.4) (2026-10-14)
 
 
