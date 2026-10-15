@@ -1,3 +1,10 @@
+## [2.9.10](https://github.com/chris-yyau/busdriver/compare/v2.9.9...v2.9.10) (2026-10-15)
+
+
+### Bug Fixes
+
+* **brainstorming:** resolve the ultra-oracle wrapper and carry the design in a file ([#885](https://github.com/chris-yyau/busdriver/issues/885)) ([#911](https://github.com/chris-yyau/busdriver/issues/911)) ([4434584](https://github.com/chris-yyau/busdriver/commit/4434584450c286e69984e4836f7ee13626ded436)), closes [#885-only](https://github.com/chris-yyau/busdriver/issues/885-only) [#821](https://github.com/chris-yyau/busdriver/issues/821)
+
 ## [2.9.9](https://github.com/chris-yyau/busdriver/compare/v2.9.8...v2.9.9) (2026-10-15)
 
 
