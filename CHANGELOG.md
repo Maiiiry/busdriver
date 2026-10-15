@@ -1,3 +1,10 @@
+## [2.9.11](https://github.com/chris-yyau/busdriver/compare/v2.9.10...v2.9.11) (2026-10-15)
+
+
+### Bug Fixes
+
+* **pr-grind:** treat a stalled worker kill as a re-dispatch, not an operator stop ([#558](https://github.com/chris-yyau/busdriver/issues/558)) ([#976](https://github.com/chris-yyau/busdriver/issues/976)) ([61488d8](https://github.com/chris-yyau/busdriver/commit/61488d86d10f63d2418cdc767bbac107c40f8055))
+
 ## [2.9.10](https://github.com/chris-yyau/busdriver/compare/v2.9.9...v2.9.10) (2026-10-15)
 
 
