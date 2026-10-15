@@ -1,3 +1,10 @@
+## [2.9.9](https://github.com/chris-yyau/busdriver/compare/v2.9.8...v2.9.9) (2026-10-15)
+
+
+### Bug Fixes
+
+* **litmus:** cap enrichment context without a SIGPIPE-prone pipeline ([#876](https://github.com/chris-yyau/busdriver/issues/876)) ([#910](https://github.com/chris-yyau/busdriver/issues/910)) ([eb40c5c](https://github.com/chris-yyau/busdriver/commit/eb40c5c09bf029a2f6dcdfca2e367fe963367fd7))
+
 ## [2.9.8](https://github.com/chris-yyau/busdriver/compare/v2.9.7...v2.9.8) (2026-10-14)
 
 
