@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/chris-yyau/busdriver/compare/v2.9.13...v2.10.0) (2026-10-16)
+
+
+### Features
+
+* **blueprint-review:** continue a stopped review without resetting it ([#948](https://github.com/chris-yyau/busdriver/issues/948)) ([#977](https://github.com/chris-yyau/busdriver/issues/977)) ([f3e8a3e](https://github.com/chris-yyau/busdriver/commit/f3e8a3ed8f65f3f5cfe10d832d0a67b171973289))
+
 ## [2.9.13](https://github.com/chris-yyau/busdriver/compare/v2.9.12...v2.9.13) (2026-10-16)
 
 
