@@ -96,6 +96,7 @@ run_block() {
     log_info() { :; }; log_warning() { :; }; log_error() { :; }
     get_review_file() { echo "$TMP/$1"; }
     _bp_mark_dispatched() { :; }  # #840 dispatch record: out of scope here
+    _await_recorded() { :; }  # #948 .loop.pid record: out of scope here
     _bp_new_canary() { printf '%032d' 0; }  # #840 canary/receipt helpers: stubbed so the
     _bp_canary_prompt() { printf 'framed review prompt (stub)'; }  # harness never leans on
     _bp_write_receipt() { :; }  # an undefined function failing benignly

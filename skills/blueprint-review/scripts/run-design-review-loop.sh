@@ -233,8 +233,65 @@ _uora_rc_grace() {
 }
 source "$SCRIPT_DIR/lib/state_management.sh"
 
+# #948: resolve the pointer ONCE and pin this run's review directory, so a later move
+# of the pointer (init, --continue) never redirects its writes into another review.
+# Read under the cross-review lock they hold while moving it; signals wait for its release.
+if [[ -L docs || -L docs/reviews ]]; then  # never write the lock, PID or artifacts through an alias
+  log_error "docs or docs/reviews is a symlink; refusing to follow it."
+  exit 1
+fi
+mkdir -p docs/reviews
+trap '' INT TERM HUP
+if ! mkdir docs/reviews/.continue.lock 2>/dev/null; then
+  log_error "An init or --continue holds docs/reviews/.continue.lock; run the loop again once it has finished."
+  log_error "If none is running, a killed one left it: inspect, then remove it."
+  exit 1
+fi
+_DR_REVIEW_DIR_PIN=$(get_review_dir)
+# It also announces itself for its whole run: init and --continue treat a review as
+# finished, and clean it up or reset it, only once no live process holds this file.
+_LOOP_PID_FILE="$_DR_REVIEW_DIR_PIN/.loop.pid"
+_loop_refusal=""
+if [[ -L "$_DR_REVIEW_DIR_PIN" ]]; then
+  _loop_refusal="$_DR_REVIEW_DIR_PIN is a symlink; refusing to follow it."
+elif loop_alive "$_DR_REVIEW_DIR_PIN"; then
+  _loop_refusal="A loop is already running on $_DR_REVIEW_DIR_PIN (pid $({ [[ -f "$_LOOP_PID_FILE" ]] && head -n 1 "$_LOOP_PID_FILE"; } 2>/dev/null || echo '?'))."
+elif ! { mkdir -p "$_DR_REVIEW_DIR_PIN" && rm -f "$_LOOP_PID_FILE" \
+         && (set -C; echo "$$" > "$_LOOP_PID_FILE"); }; then  # noclobber: never through a link
+  _loop_refusal="Cannot write $_LOOP_PID_FILE."
+fi
+rmdir docs/reviews/.continue.lock
+trap - INT TERM HUP
+if [[ -n "$_loop_refusal" ]]; then
+  log_error "$_loop_refusal Refusing to run."
+  exit 1
+fi
+_release_loop_pid() {
+  # Reviewer jobs still running (the loop alone was signalled) would write after the
+  # release, so the file is held until they exit. A normal exit has joined them already.
+  wait 2>/dev/null || true
+  if [[ "$(head -n 1 "$_LOOP_PID_FILE" 2>/dev/null || true)" == "$$" ]]; then
+    rm -f "$_LOOP_PID_FILE"
+  fi
+  # This trap replaced resolve-cli.sh's EXIT trap, so run its staged-library cleanup too.
+  declare -F _bd803_cleanup_review_lib_exec >/dev/null && _bd803_cleanup_review_lib_exec || true
+}
+trap _release_loop_pid EXIT
+# A reviewer job writes nothing until the loop has recorded its PID: a loop SIGKILLed
+# between a launch and its record leaves a job that exits untouched.
+_await_recorded() {
+  local i me
+  # Its own PID: BASHPID where it exists; Bash 3.2 has none, and sh reports its parent.
+  me=${BASHPID:-$(exec sh -c 'echo "$PPID"')}
+  for ((i = 0; i < 100; i++)); do
+    grep -qx "$me" "$_LOOP_PID_FILE" 2>/dev/null && return 0
+    sleep 0.05
+  done
+  return 1
+}
+
 # Ensure output directory exists (namespaced per design doc)
-REVIEW_DIR=$(get_review_dir)
+REVIEW_DIR=$_DR_REVIEW_DIR_PIN
 mkdir -p "$REVIEW_DIR"
 
 # Cross-platform millisecond timestamp
@@ -529,6 +586,39 @@ fi
 DESIGN_FILE=$(get_design_file)
 log_info "Design file: $DESIGN_FILE"
 
+# ── #948 D2: a stopped review is continued, never re-run ──────────────
+# Re-running a parked or ceiling-stopped state would erase its trajectory (the
+# :1889 reset) and leave the stopped attempt uncounted, and the leftovers of a
+# killed `--continue` mean a commit may be missing its record. Runs before the
+# marker snapshot, the artifact cleanup and every state write, in both modes.
+_BP_GUARD_PROGRESS=$(get_state_field "progress_status" || true)
+_BP_GUARD_STATUS=$(get_state_field "status" || true)
+_BP_GUARD_DIR=$(get_review_dir)
+_bp_leftovers=()
+for _bp_f in "$_BP_GUARD_DIR/.continue.lock" "$_BP_GUARD_DIR"/state.md.continue.* "$_BP_GUARD_DIR"/attempts/.staging.*; do
+  if [[ -e "$_bp_f" || -L "$_bp_f" ]]; then
+    _bp_leftovers+=("$_bp_f")
+  fi
+done
+if [[ ${#_bp_leftovers[@]} -gt 0 ]]; then
+  log_error "A killed init-design-review.sh --continue left these behind; refusing to run:"
+  for _bp_f in "${_bp_leftovers[@]}"; do
+    log_error "  $_bp_f"
+  done
+  log_error "Inspect them (a committed continuation may be missing its ledger line), then remove them."
+  exit 1
+fi
+if [[ "$_BP_GUARD_PROGRESS" == "parked_no_progress" ]]; then
+  log_error "This review is PARKED (no progress). Re-running it would reset its history and leave the parked attempt uncounted."
+  log_error "Continue it with: /bin/bash -p scripts/init-design-review.sh --continue $DESIGN_FILE"
+  exit 1
+fi
+if [[ "$_BP_GUARD_STATUS" == "max_iterations_exceeded" ]]; then
+  log_error "This review stopped at its iteration ceiling."
+  log_error "Continue it with: /bin/bash -p scripts/init-design-review.sh --continue $DESIGN_FILE --max-iterations N"
+  exit 1
+fi
+
 # ── Task 2 (ADR-D): snapshot this doc's marker tokens BEFORE the review runs ──
 # On PASS we prune exactly this snapshot. A token re-armed DURING the review (a
 # concurrent edit → new nonce) is NOT in the snapshot, so it survives the prune
@@ -594,6 +684,24 @@ if [[ "$CLAUDE_ONLY" == "true" ]]; then
     log_error "Recovered run_id '$RUN_ID' contains characters unsafe for use as a path component; refusing to use it."
     exit 1
   fi
+  # #948 D8: after `--continue`, the next verdict must rest on a fresh full round.
+  if [[ "$(get_state_field "fresh_round_required" || true)" == "true" ]]; then
+    log_error "--claude-only is refused: this review was continued and its next round must be a full one."
+    log_error "Run the loop without --claude-only."
+    exit 1
+  fi
+  # Second, independent check. A stored null comes back as the literal `null`,
+  # which the run_id pattern admits, so it is skipped rather than compared.
+  _BP_LAST_STOP_RUN_ID=$(get_state_field "last_stop_run_id" || true)
+  case "$_BP_LAST_STOP_RUN_ID" in
+    ""|null) ;;
+    *)
+      if [[ "$RUN_ID" == "$_BP_LAST_STOP_RUN_ID" ]]; then
+        log_error "--claude-only is refused: run $RUN_ID is the run this review stopped on; its verdict cannot be reused."
+        exit 1
+      fi
+      ;;
+  esac
   log_info "Mode: CLAUDE-ONLY (Phase 3-5 only)"
   log_info "Recovered run ID: $RUN_ID"
   AGY_AVAILABLE=false
@@ -767,7 +875,8 @@ while true; do
   if is_max_iterations_reached; then
     log_warning "Maximum iterations ($MAX_ITERATIONS) reached"
     log_info "Design review did not converge. Human intervention required."
-    log_info "Options: fix issues and re-run, or create $STATE_DIR/skip-design-review.local in terminal."
+    log_info "Options: fix issues, then continue with: init-design-review.sh --continue $DESIGN_FILE --max-iterations N"
+    log_info "         (a plain re-run is refused), or create $STATE_DIR/skip-design-review.local in terminal."
     record_coverage_finalize
     mark_review_complete "max_iterations_exceeded"
     exit 1
@@ -835,6 +944,8 @@ while true; do
   # ── Optional ultra-oracle auxiliary advisory: dispatch in background (parallel) ──
   # Opt-in; visible best-effort. Capture the TYPED status (a skip writes no .rc).
   # Never in --claude-only mode (no design re-transmitted when the operator chose Claude-only).
+  # Not listed in .loop.pid (#948): it writes only $STATE_DIR/ultra-oracle/<run_id>-* (and the
+  # adapter's browser lock), never the review directory, and every run has its own run id.
   if [ "$CLAUDE_ONLY" != "true" ] && command -v ultra_oracle_surface_enabled >/dev/null 2>&1 && ultra_oracle_surface_enabled blueprintReview; then
     ULTRA_ORACLE_ADVISORY_FILE="$STATE_DIR/ultra-oracle/${RUN_ID}-plan-review.md"
     rm -f "$ULTRA_ORACLE_ADVISORY_FILE" "$ULTRA_ORACLE_ADVISORY_FILE.rc" "$ULTRA_ORACLE_ADVISORY_FILE.hint" \
@@ -961,6 +1072,7 @@ $DESIGN_CONTENT
 
   # Run Agy (reviewer 1) in background
   (
+    _await_recorded || exit 1
     if [[ "$AGY_AVAILABLE" == "true" ]]; then
       AGY_RAW_FILE=$(get_review_file "agy-raw.txt")
       AGY_START=$(millis)
@@ -1038,9 +1150,11 @@ with open(pending, "w") as f:
     fi
   ) &
   AGY_PID=$!
+  echo "$AGY_PID" >> "$_LOOP_PID_FILE"  # #948: a reviewer job holds the review (its CLI: ADR 0057 residual)
 
   # Run Codex in background
   (
+    _await_recorded || exit 1
     if [[ "$CODEX_AVAILABLE" == "true" ]]; then
       CODEX_RAW_FILE=$(get_review_file "codex-raw.txt")
       CODEX_START=$(millis)
@@ -1118,12 +1232,14 @@ with open(pending, "w") as f:
     fi
   ) &
   CODEX_PID=$!
+  echo "$CODEX_PID" >> "$_LOOP_PID_FILE"
 
   # Run Grok (reviewer 3) in background — clone of the Codex block above with
   # s/CODEX/GROK/g and s/codex/grok/g. Mirrors execute_review contract,
   # JSON-extraction, metadata injection, and error handling. Added 2026-05-26
   # to extend voice-lineage diversity into design review (xAI Grok backend).
   (
+    _await_recorded || exit 1
     if [[ "$GROK_AVAILABLE" == "true" ]]; then
       GROK_RAW_FILE=$(get_review_file "grok-raw.txt")
       GROK_START=$(millis)
@@ -1194,6 +1310,7 @@ with open(pending, "w") as f:
     fi
   ) &
   GROK_PID=$!
+  echo "$GROK_PID" >> "$_LOOP_PID_FILE"
 
   # Wait for all three to complete
   log_info "  Waiting for parallel reviews..."
@@ -1275,6 +1392,11 @@ with open(pending, "w") as f:
 
   # Coverage provenance: capture which slots actually ran (non-claude-only only)
   persist_dispatch_provenance
+  # #948 D8: every reviewer of this full round has finished, so it may clear the flag
+  # that refused --claude-only after a continuation. Cleared any earlier, an interrupted
+  # round would let --claude-only synthesize the missing reviewer files. A legacy state
+  # without the key is left as it is (update_state_field never inserts).
+  update_state_field "fresh_round_required" "false"
   fi  # end of CLAUDE_ONLY guard (Phase 1-2 skipped in claude-only mode)
 
   # Coverage provenance: finalize fulfilled/reason from this iteration's outputs (both modes)
@@ -1731,6 +1853,9 @@ WARNING: ULTRA-ORACLE ADVISORY enabled but the adapter could not be loaded -- ve
     # exact reason (arbiter_verdict_uncountable), so a reader of state.md sees a
     # consistent terminal-state contract regardless of which guard caught the
     # uncountable verdict. mark_review_complete only writes status/active.
+    # #948 D5: nothing from this round was persisted, so the blocker to carry is
+    # the persisted one, read before the park overwrites it.
+    record_pre_park "$(get_state_field "progress_status" || true)"
     update_state_field "progress_status" "\"parked_no_progress\""
     update_state_field "early_stopped" "\"arbiter_verdict_uncountable\""
     mark_review_complete "uncountable_claude_output"
@@ -1870,6 +1995,9 @@ WARNING: ULTRA-ORACLE ADVISORY enabled but the adapter could not be loaded -- ve
   else
     PROGRESS_STATUS="passed"
   fi
+  # #948 D5: a trajectory park overwrites PROGRESS_STATUS below; keep this round's
+  # real blocker for the pre-park write.
+  _BP_ROUND_PROGRESS="$PROGRESS_STATUS"
 
   # Why the park reason is a SHELL var written later rather than persisted at the point
   # of decision (#656): every persistence call is fallible, and under `set -e` a failing
@@ -2021,7 +2149,8 @@ WARNING: ULTRA-ORACLE ADVISORY enabled but the adapter could not be loaded -- ve
     log_warning "  Run: $RUN_ID | High: $HIGH_COUNT | Medium: $MEDIUM_COUNT | Low: $LOW_COUNT"
     log_warning "  PASS is WITHHELD — this is not an approval. Review stays PENDING."
     log_warning "  Pending review tokens left ARMED — implementation stays gated."
-    log_warning "  Address the findings and re-run, or create skip-design-review.local to proceed knowingly."
+    log_warning "  Address the findings, then continue with: init-design-review.sh --continue $DESIGN_FILE"
+    log_warning "  (a plain re-run is refused), or create skip-design-review.local to proceed knowingly."
     if [[ -f "$DESIGN_FILE" ]] && grep -q "$_RE_PASS" "$DESIGN_FILE" 2>/dev/null; then
       # shellcheck disable=SC2310  # predicate used in a condition by design
       if _dr_atomic_sed "s|$_RE_PASS|<!-- design-reviewed: PENDING -->|" "$DESIGN_FILE"; then
@@ -2067,6 +2196,13 @@ WARNING: ULTRA-ORACLE ADVISORY enabled but the adapter could not be loaded -- ve
     # leaves the review "active" — which on THIS branch is the deliberate fail-closed
     # stance already adopted for the downgrade failure above, not an oversight.
     # Persisted only NOW — after the document is honest. See _PARK_REASON in Phase 4.
+    # #948 D5: the blocker --continue will carry. A write-site uncountable round's
+    # counts are placeholders, so its last real blocker is the one persisted before it.
+    if [[ "$_PARK_REASON" == "arbiter_verdict_uncountable" ]]; then
+      record_pre_park "$PREV_PROGRESS_STATUS"
+    else
+      record_pre_park "$_BP_ROUND_PROGRESS"
+    fi
     update_state_field "progress_status" "\"$PROGRESS_STATUS\""
     update_state_field "early_stopped" "\"${_PARK_REASON:-no_improvement_trajectory}\""
     record_coverage_finalize
