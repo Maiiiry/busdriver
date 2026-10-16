@@ -1,3 +1,10 @@
+## [2.9.12](https://github.com/chris-yyau/busdriver/compare/v2.9.11...v2.9.12) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ack-ledger:** skip Codex's leading receipt marker before the Tier G match ([#979](https://github.com/chris-yyau/busdriver/issues/979)) ([#980](https://github.com/chris-yyau/busdriver/issues/980)) ([b89829e](https://github.com/chris-yyau/busdriver/commit/b89829e49a709c9e3ec79ece9280df609b866e3c))
+
 ## [2.9.11](https://github.com/chris-yyau/busdriver/compare/v2.9.10...v2.9.11) (2026-10-15)
 
 
