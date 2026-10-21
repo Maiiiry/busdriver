@@ -1,3 +1,10 @@
+## [2.11.2](https://github.com/chris-yyau/busdriver/compare/v2.11.1...v2.11.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **pr-grind:** don't nudge Codex into a running review; re-justify the await cap ([#830](https://github.com/chris-yyau/busdriver/issues/830), [#867](https://github.com/chris-yyau/busdriver/issues/867)) ([#995](https://github.com/chris-yyau/busdriver/issues/995)) ([7cc55ba](https://github.com/chris-yyau/busdriver/commit/7cc55ba612f558aba800c296d8d7d00e7892da66)), closes [#818](https://github.com/chris-yyau/busdriver/issues/818)
+
 ## [2.11.1](https://github.com/chris-yyau/busdriver/compare/v2.11.0...v2.11.1) (2026-10-20)
 
 
