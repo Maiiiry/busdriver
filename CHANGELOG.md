@@ -1,3 +1,10 @@
+## [2.11.9](https://github.com/chris-yyau/busdriver/compare/v2.11.8...v2.11.9) (2026-10-23)
+
+
+### Bug Fixes
+
+* **marker_check:** keep && inside [[ ]] in the conditional ([#947](https://github.com/chris-yyau/busdriver/issues/947)) ([#1016](https://github.com/chris-yyau/busdriver/issues/1016)) ([ff3b398](https://github.com/chris-yyau/busdriver/commit/ff3b398447f1404763c56370a23d1d66d8652d58)), closes [#889](https://github.com/chris-yyau/busdriver/issues/889)
+
 ## [2.11.8](https://github.com/chris-yyau/busdriver/compare/v2.11.7...v2.11.8) (2026-10-23)
 
 
