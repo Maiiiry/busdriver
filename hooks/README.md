@@ -16,6 +16,7 @@ warns about any other key (`hooks.json: unknown keys "description" ...`).
 | PreToolUse | `Bash` | `ref-ff-gate.sh` | [GATE] Block a fast-forward of the protected branch to unreviewed content (git merge / git pull) until an operator-written, oid-bound PASS-FF marker authorizes the exact commit on a git merge --ff-only; a pull on a protected branch has no route at all, because the commit it would land does not exist locally when the gate runs [#779] |
 | PreToolUse | `Bash` | `codex-nudge-premerge.sh` | [NUDGE] Non-gating: fire @codex review on gh pr merge when Codex is none + repo active |
 | PreToolUse | `Write\|Edit\|MultiEdit\|Bash` | `pre-implementation-gate.sh` | [GATE] Block impl code while design docs unreviewed |
+| PreToolUse | `Bash` | `check-design-document.sh` | [STATE] Snapshot dirty design docs before a Bash call so the post half arms docs the call changed by effect, not by command spelling [#921] |
 | PreToolUse | `Write\|Edit\|MultiEdit` | `freeze-guard.sh` | [GATE] Freeze/Guard — restrict edits to investigation scope during debugging |
 | PreToolUse | `Bash` | `block-no-verify.js` | Block git hook-bypass flag to protect pre-commit hooks |
 | PreToolUse | `Bash` | `auto-tmux-dev.js` | Auto-start dev servers in tmux with directory-based session names |
@@ -50,6 +51,7 @@ warns about any other key (`hooks.json: unknown keys "description" ...`).
 | PostToolUse | `mcp__plugin_claude-mem_mcp-search__.*` | `post-memory-recall-reminder.sh` | [REMINDER] Verify-before-assert nudge after claude-mem recall (stale-by-default LEAD, not ground truth) |
 | PostToolUse | `Bash` | `post-bash-command-log.js` | Audit log bash commands to ~/.claude/bash-commands.log |
 | PostToolUseFailure | `mcp__.*` | `mcp-health-check.js` | Track failed MCP tool calls, mark unhealthy servers |
+| PostToolUseFailure | `Bash` | `check-design-document.sh` | [STATE] Flag design docs changed by a Bash call that exited non-zero (delivered to PostToolUseFailure, not PostToolUse) [#921] |
 | Stop | `*` | `check-console-log.js` | Check for console.log in modified files |
 | Stop | `*` | `session-end.js` | Persist session state after each response |
 | Stop | `*` | `cost-tracker.js` | Track token and cost metrics per session |

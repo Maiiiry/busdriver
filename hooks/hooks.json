@@ -144,6 +144,24 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/gate-scripts/lib/contained-launch.sh",
+            "args": [
+              "closed",
+              "PATH=/usr/bin:/bin",
+              "CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}",
+              "/bin/bash",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/gate-scripts/lib/sanitized-gate.sh",
+              "check-design-document.sh"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
@@ -591,6 +609,24 @@
               "scripts/hooks/mcp-health-check.js",
               "standard,strict"
             ]
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/gate-scripts/lib/contained-launch.sh",
+            "args": [
+              "closed",
+              "PATH=/usr/bin:/bin",
+              "CLAUDE_PLUGIN_ROOT=${CLAUDE_PLUGIN_ROOT}",
+              "/bin/bash",
+              "${CLAUDE_PLUGIN_ROOT}/hooks/gate-scripts/lib/sanitized-gate.sh",
+              "check-design-document.sh"
+            ],
+            "timeout": 5
           }
         ]
       }
