@@ -1,3 +1,10 @@
+## [2.11.12](https://github.com/chris-yyau/busdriver/compare/v2.11.11...v2.11.12) (2026-10-24)
+
+
+### Bug Fixes
+
+* **design-gate:** arm a Bash call's design-doc edits by effect, not spelling ([#921](https://github.com/chris-yyau/busdriver/issues/921)) ([#1017](https://github.com/chris-yyau/busdriver/issues/1017)) ([48eae3f](https://github.com/chris-yyau/busdriver/commit/48eae3f6890f43ba0a90a6298d3bfe5ab41d1332))
+
 ## [2.11.11](https://github.com/chris-yyau/busdriver/compare/v2.11.10...v2.11.11) (2026-10-24)
 
 
