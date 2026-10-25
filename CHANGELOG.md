@@ -1,3 +1,10 @@
+## [3.0.3](https://github.com/chris-yyau/busdriver/compare/v3.0.2...v3.0.3) (2026-10-25)
+
+
+### Bug Fixes
+
+* **pr-grind:** wrap the grind commit body at 100 bytes ([#888](https://github.com/chris-yyau/busdriver/issues/888)) ([#1029](https://github.com/chris-yyau/busdriver/issues/1029)) ([353aab6](https://github.com/chris-yyau/busdriver/commit/353aab6600ac263ffd5d247ff2dca7f0a0bc1d87))
+
 ## [3.0.2](https://github.com/chris-yyau/busdriver/compare/v3.0.1...v3.0.2) (2026-10-25)
 
 
