@@ -1191,14 +1191,42 @@ RESULT_COMMIT_TYPE="fix"
 # --- Step 7: Compose the commit message ---
 COMMIT_MSG=$({
     printf '%s: address PR #%s feedback\n' "$RESULT_COMMIT_TYPE" "$PR_NUMBER"
-    printf '\n%s\n' "$RESULT_FIXES"
+    # Wrap at commitlint's default body-max-line-length (#888): the Step 8 pre-flight
+    # is skipped in repos whose commitlint runs only in CI, and fixing a rejected
+    # pushed commit needs an amend + force-push that pr-grind may not do. Counted in
+    # BYTES (LC_ALL=C), never display width: a UTF-8 byte count is never below the
+    # UTF-16 length commitlint measures, while fold's column count lets combining
+    # characters through. Words break on spaces and tabs; a word over 100 bytes is
+    # hard-broken (a long URL can never pass unbroken), backing off continuation
+    # bytes (0x80-0xBF) so each piece stays valid UTF-8.
+    printf '\n'
+    printf '%s\n' "$RESULT_FIXES" | LC_ALL=C awk '{
+        # A line that already fits is kept verbatim, so its spacing survives.
+        if (length($0) <= 100) { print; next }
+        line = ""; n = split($0, w, /[ \t]+/)
+        for (i = 1; i <= n; i++) {
+            if (w[i] == "") continue
+            while (length(w[i]) > 100) {
+                if (line != "") { print line; line = "" }
+                cut = 100
+                while (cut > 1 && substr(w[i], cut + 1, 1) >= "\200" && substr(w[i], cut + 1, 1) < "\300") cut--
+                print substr(w[i], 1, cut); w[i] = substr(w[i], cut + 1)
+            }
+            if (line == "") line = w[i]
+            else if (length(line) + 1 + length(w[i]) <= 100) line = line " " w[i]
+            else { print line; line = w[i] }
+        }
+        print line
+    }'
     if [ "$POST_LITMUS_DIFF_SHA" != "$PRE_LITMUS_DIFF_SHA" ]; then
+        # One Litmus-Auto-Fix: line per added path: a space-joined list overruns the
+        # 100-byte body line limit (#888) once a few paths are added.
         added_paths=$(comm -13 \
             <(printf '%s\n' "$PRE_LITMUS_PATHS") \
             <(printf '%s\n' "$POST_LITMUS_PATHS") \
-            | tr '\n' ' ' \
-            | sed 's/ $//')
-        printf '\nLitmus-Auto-Fix: %s\n' "${added_paths:-content-only-edits}"
+            | sed '/^$/d')
+        printf '\n'
+        printf '%s\n' "${added_paths:-content-only-edits}" | sed 's/^/Litmus-Auto-Fix: /'
     fi
     # Durable grind provenance (Rail A / ADR 0036). This is the sole commit path,
     # so this is the only place the marker can be stamped.
