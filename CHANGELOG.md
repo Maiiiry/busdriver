@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/chris-yyau/busdriver/compare/v3.0.0...v3.0.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **dispatch-cli:** pin /bin/bash -p and close the bash 3.2 checkout-pin fail-open ([#1033](https://github.com/chris-yyau/busdriver/issues/1033)) ([65afd2b](https://github.com/chris-yyau/busdriver/commit/65afd2b9c6c3d7082884af1045b964ce2d1d0cca)), closes [#803](https://github.com/chris-yyau/busdriver/issues/803)
+
 # [3.0.0](https://github.com/chris-yyau/busdriver/compare/v2.11.13...v3.0.0) (2026-10-25)
 
 
