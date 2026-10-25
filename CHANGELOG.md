@@ -1,3 +1,10 @@
+## [3.0.4](https://github.com/chris-yyau/busdriver/compare/v3.0.3...v3.0.4) (2026-10-25)
+
+
+### Bug Fixes
+
+* **litmus:** say when a codex timeout may be a hung app-server ([#1024](https://github.com/chris-yyau/busdriver/issues/1024)) ([#1036](https://github.com/chris-yyau/busdriver/issues/1036)) ([6ef7c17](https://github.com/chris-yyau/busdriver/commit/6ef7c1737f90daee6a1ef1791a22feb8c1d1aabc)), closes [#803](https://github.com/chris-yyau/busdriver/issues/803) [#800](https://github.com/chris-yyau/busdriver/issues/800) [#803](https://github.com/chris-yyau/busdriver/issues/803)
+
 ## [3.0.3](https://github.com/chris-yyau/busdriver/compare/v3.0.2...v3.0.3) (2026-10-25)
 
 
