@@ -1,3 +1,10 @@
+## [2.11.13](https://github.com/chris-yyau/busdriver/compare/v2.11.12...v2.11.13) (2026-10-25)
+
+
+### Bug Fixes
+
+* **pr-grind:** drain the spent clean marker once its merge lands ([#842](https://github.com/chris-yyau/busdriver/issues/842)) ([#1026](https://github.com/chris-yyau/busdriver/issues/1026)) ([65173f6](https://github.com/chris-yyau/busdriver/commit/65173f6e4ab5c95ec59d75df53cad4486f179436))
+
 ## [2.11.12](https://github.com/chris-yyau/busdriver/compare/v2.11.11...v2.11.12) (2026-10-24)
 
 
