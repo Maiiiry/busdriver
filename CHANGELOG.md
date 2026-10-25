@@ -1,3 +1,10 @@
+## [3.0.2](https://github.com/chris-yyau/busdriver/compare/v3.0.1...v3.0.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* **marker_check:** keep literal quoted spans whole in the $(...) flatten ([#889](https://github.com/chris-yyau/busdriver/issues/889)) ([#1030](https://github.com/chris-yyau/busdriver/issues/1030)) ([5939b19](https://github.com/chris-yyau/busdriver/commit/5939b19104394531073d0d9cba107f34a7568c73))
+
 ## [3.0.1](https://github.com/chris-yyau/busdriver/compare/v3.0.0...v3.0.1) (2026-10-25)
 
 
