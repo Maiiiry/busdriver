@@ -1,3 +1,10 @@
+## [3.0.5](https://github.com/chris-yyau/busdriver/compare/v3.0.4...v3.0.5) (2026-10-26)
+
+
+### Bug Fixes
+
+* **gates:** block when the hook payload has no absolute cwd ([#912](https://github.com/chris-yyau/busdriver/issues/912)) ([#1037](https://github.com/chris-yyau/busdriver/issues/1037)) ([31c9bd2](https://github.com/chris-yyau/busdriver/commit/31c9bd2fc365b7543f19a90188b5bbddc05600c7))
+
 ## [3.0.4](https://github.com/chris-yyau/busdriver/compare/v3.0.3...v3.0.4) (2026-10-25)
 
 
