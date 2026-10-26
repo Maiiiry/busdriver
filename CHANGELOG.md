@@ -1,3 +1,10 @@
+## [3.0.6](https://github.com/chris-yyau/busdriver/compare/v3.0.5...v3.0.6) (2026-10-26)
+
+
+### Bug Fixes
+
+* **litmus:** resolve the PR backstop's claude through the trusted resolver ([#896](https://github.com/chris-yyau/busdriver/issues/896)) ([#1040](https://github.com/chris-yyau/busdriver/issues/1040)) ([44285d8](https://github.com/chris-yyau/busdriver/commit/44285d82c098dbf73183ba8d4f2ebc6be84d1ec8)), closes [#789](https://github.com/chris-yyau/busdriver/issues/789)
+
 ## [3.0.5](https://github.com/chris-yyau/busdriver/compare/v3.0.4...v3.0.5) (2026-10-26)
 
 
