@@ -1,3 +1,10 @@
+## [3.0.7](https://github.com/chris-yyau/busdriver/compare/v3.0.6...v3.0.7) (2026-10-26)
+
+
+### Bug Fixes
+
+* **codex-retrigger:** ignore a security review pending on another commit ([#1021](https://github.com/chris-yyau/busdriver/issues/1021)) ([#1041](https://github.com/chris-yyau/busdriver/issues/1041)) ([3f8ba3b](https://github.com/chris-yyau/busdriver/commit/3f8ba3b4270f1328a6735b76e1fad27cd033e6e2))
+
 ## [3.0.6](https://github.com/chris-yyau/busdriver/compare/v3.0.5...v3.0.6) (2026-10-26)
 
 
