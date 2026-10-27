@@ -1,3 +1,10 @@
+## [3.0.9](https://github.com/chris-yyau/busdriver/compare/v3.0.8...v3.0.9) (2026-10-27)
+
+
+### Bug Fixes
+
+* **marker_check:** read quoted command-substitution bodies ([#1013](https://github.com/chris-yyau/busdriver/issues/1013)) ([#1038](https://github.com/chris-yyau/busdriver/issues/1038)) ([3fc6b41](https://github.com/chris-yyau/busdriver/commit/3fc6b41dd60214b880fe0d53935eb6eba3fd8de0)), closes [#x](https://github.com/chris-yyau/busdriver/issues/x) [#hi](https://github.com/chris-yyau/busdriver/issues/hi) [#1039](https://github.com/chris-yyau/busdriver/issues/1039)
+
 ## [3.0.8](https://github.com/chris-yyau/busdriver/compare/v3.0.7...v3.0.8) (2026-10-27)
 
 
