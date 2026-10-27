@@ -156,7 +156,10 @@ def add(p):
             h = hashlib.sha256(open(p, "rb").read()).hexdigest()
         except OSError:
             h = "unreadable"
-    seen.add(f"{p} {st.st_size} {oct(st.st_mode)} {h}")
+    # A directory's st_size is the filesystem's business (fixed on ext4, an entry count on
+    # APFS and tmpfs), and its entries are listed on their own lines anyway (#1000).
+    size = "-" if os.path.isdir(p) and not os.path.islink(p) else st.st_size
+    seen.add(f"{p} {size} {oct(st.st_mode)} {h}")
 for top in [a for a in sys.argv[1:] if a]:
     if not os.path.lexists(top):
         continue
@@ -617,7 +620,8 @@ done
   bash "$INIT" --continue "$DESIGN" >"$W/o2" 2>&1 & p2=$!
   wait $p1; r1=$?; wait $p2; r2=$?
   expect "21 two concurrent --continue: exactly one commits" '[[ $((r1 + r2)) -eq 1 && "$(getf "$S" continuation_count)" == 1
-    && $(wc -l < "$D/continuations.jsonl") -eq 1 && $(ls "$D/attempts" | wc -l) -eq 1 ]]' "r1=$r1 r2=$r2" )
+    && $(wc -l < "$D/continuations.jsonl") -eq 1 && $(ls "$D/attempts" | wc -l) -eq 1 ]]' \
+    "r1=$r1 r2=$r2 | o1: $(tail -n 3 "$W/o1" | tr '\n' ' ') | o2: $(tail -n 3 "$W/o2" | tr '\n' ' ')" )
 
 # ── 22. No dead ends (I6) ──
 for st in awaiting_claude_validation stale_claude_output invalid_claude_output ABANDONED degraded_coverage error_no_design_file; do
@@ -1010,7 +1014,7 @@ done
   expect "26 stale cleanup refuses a review whose loop is alive, nothing changed" \
     '[[ $RC -eq 1 && "$OUT" == *"loop is running"* && "$a" == "$b" ]]' "$OUT" )
 cleanup_locked() {  # <init>: init's stale cleanup runs while it holds the cross-review lock
-  awk '/^if ! _claim "\$ALL_LOCK"/ { m = NR } /^  cleanup_stale_review$/ { c = NR } /^rmdir "\$ALL_LOCK"$/ { r = NR }
+  awk '/^if ! _claim_lock "\$ALL_LOCK"/ { m = NR } /^  cleanup_stale_review$/ { c = NR } /^rmdir "\$ALL_LOCK"$/ { r = NR }
        END { exit !(m && c && r && m < c && c < r) }' "$1"
 }
 expect "26 static: init's stale cleanup runs under the cross-review lock" 'cleanup_locked "$INIT"'
@@ -1070,9 +1074,9 @@ done
 # ── 21 (beyond the design; litmus rounds 2-3): signals are deferred to checkpoints ──
 # The mutant takes signals immediately, as before the fix.
 SIGDEFER="trap '_CONT_SIG=1' INT TERM HUP
-  _claim \"\$ALL_LOCK\""
+  _claim_lock \"\$ALL_LOCK\""
 SIGNOW="trap 'exit 1' INT TERM HUP
-  _claim \"\$ALL_LOCK\""
+  _claim_lock \"\$ALL_LOCK\""
 # The mv shim commits, then sends TERM to init before init can swap its EXIT trap.
 for build in repaired mutant; do
   ( new_fixture; write_state demo "$DESIGN"; write_artifacts demo r21s
@@ -1264,6 +1268,22 @@ done
   rmdir docs/reviews/.continue.lock; init_ "$DESIGN"
   expect "21 control: fresh init succeeds and releases the lock" \
     '[[ $RC -eq 0 && ! -e docs/reviews/.continue.lock && "$(getf "$S" iteration)" == 1 ]]' "$OUT" )
+
+# uutils mkdir (ubuntu-26.04) can report success on a directory a racing process just
+# made, so a claim must not rest on mkdir(1). The shim models it: it never fails on an
+# existing directory. Each entry point still refuses the held lock (#1000, #1047).
+( new_fixture; write_state demo "$DESIGN"; write_artifacts demo r21u; mkdir docs/reviews/.continue.lock
+  shim mkdir "exec $REAL_MKDIR -p \"\$@\""
+  a=$(snap); OUT=$(PATH="$W/shim:$PATH" bash "$INIT" --continue "$DESIGN" 2>&1); RC=$?; b=$(snap)
+  expect "21 lock held, mkdir that never fails: --continue refuses, nothing changed" \
+    '[[ $RC -eq 1 && "$OUT" == *"docs/reviews/.continue.lock"* && "$a" == "$b" ]]' "$OUT"
+  OUT=$(PATH="$W/shim:$PATH" bash "$LOOP" --claude-only 2>&1 </dev/null); RC=$?; b=$(snap)
+  expect "21 lock held, mkdir that never fails: the loop refuses, nothing changed" \
+    '[[ $RC -eq 1 && "$OUT" == *"docs/reviews/.continue.lock"* && "$a" == "$b" ]]' "$OUT" )
+( new_fixture; mkdir docs/reviews/.continue.lock; shim mkdir "exec $REAL_MKDIR -p \"\$@\""
+  a=$(snap); OUT=$(PATH="$W/shim:$PATH" bash "$INIT" "$DESIGN" 2>&1); RC=$?; b=$(snap)
+  expect "21 lock held, mkdir that never fails: fresh init refuses, nothing changed" \
+    '[[ $RC -eq 1 && "$OUT" == *"docs/reviews/.continue.lock"* && "$a" == "$b" ]]' "$OUT" )
 
 P=$(grep -c P "$RES"); F=$(grep -c F "$RES")
 echo ""
