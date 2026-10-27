@@ -198,8 +198,8 @@ import sys
 # controlled gitcmd_detect.py or shadowed stdlib (json.py) cannot run in the gate.
 sys.path[:] = [p for p in sys.path if p not in ('', '.')]
 try:
-    import json
-    from gitcmd_detect import git_commit
+    import json, bisect
+    from gitcmd_detect import git_commit, split_segments, _tokenize, _is_exe, _raw_tokens
     d = json.load(sys.stdin)
     tool = d.get('tool_name', d.get('toolName', ''))
     if tool != 'Bash':
@@ -220,15 +220,115 @@ try:
         # it as unparseable and fail CLOSED rather than trying to re-frame.
         if any(not isinstance(v, str) or chr(10) in v or chr(13) in v for v in (target_dir, cwd, untrusted_cd)):
             raise ValueError('non-string or newline in an emitted field')
+        # #887: does the same call also run the review loop? Contract: scanning each
+        # segment left to right (grouping punctuation stripped), a word naming
+        # run-review-loop.sh counts, unless a word named git came first (the rest is
+        # git's arguments; env/command/VAR= prefixes are covered). A word holding
+        # whitespace that does not itself name the script (a bash -c string, say) is
+        # scanned again as a command line. Shell options are
+        # deliberately NOT interpreted, so bash -n / bash -s / command -v on the script
+        # count too. Neither error direction is a bypass: an over-match costs one split
+        # Bash call and a clear message, and a miss (a path behind a variable or a
+        # substitution) only reproduces the old lost PASS.
+        # A heredoc body is skipped only when it is pure data: its delimiter is quoted
+        # (so the shell expands nothing in it) AND the segment matches the closed
+        # whitelist below (git [-C dir] commit -F -, plus -q/-s only). Anything else,
+        # -c config included, keeps the body in the scan. An
+        # unquoted body can run command substitutions, and any other reader (bash, eval, xargs) may run
+        # it, so both stay in the scan. The operator is found on quote-preserving raw
+        # tokens, so a << inside a quoted argument is not one, and nothing after a #
+        # comment counts. Unmatched shapes are
+        # scanned, which at worst over-matches. Lines are split before quotes are read,
+        # so a quoted multi-line argument that itself looks like a git heredoc opener can
+        # hide the lines up to its delimiter: a miss, i.e. the old lost PASS, never an
+        # approval.
+        def drop_git_heredoc_bodies(c):
+            lines = c.split(chr(10))
+            # Terminator lookup tables, built once: each opener finds its delimiter by
+            # bisect, so crafted unmatched openers cannot make this quadratic against
+            # the hook's time budget.
+            exact, tabbed = {}, {}
+            for n, l in enumerate(lines):
+                exact.setdefault(l, []).append(n)
+                tabbed.setdefault(l.lstrip(chr(9)), []).append(n)
+            out, i = [], 0
+            while i < len(lines):
+                out.append(lines[i])
+                i += 1
+                for _op, seg in split_segments(out[-1]):
+                    raw = _raw_tokens(seg)
+                    # Unalignable tokens (escapes) or a # comment end this line: what
+                    # follows is not read as an opener, so nothing more is skipped.
+                    if raw is None:
+                        break
+                    done = False
+                    for k, t in enumerate(raw):
+                        if t.startswith('#'):
+                            done = True
+                            break
+                        if not t.startswith('<<') or t.startswith('<<<'):
+                            continue
+                        strip_tabs = t.startswith('<<-')
+                        spec = t[3:] if strip_tabs else t[2:]
+                        if not spec and k + 1 < len(raw):
+                            spec = raw[k + 1]
+                        # One plainly quoted word only; concatenated quoting (E''OF) is scanned.
+                        quoted = (len(spec) >= 2 and spec[0] == spec[-1] and spec[0] in (chr(39), chr(34))
+                                  and not any(q in spec[1:-1] for q in (chr(39), chr(34), chr(92))))
+                        # Closed whitelist, not an option parser: the whole segment must be
+                        # git [-C dir] commit, then only -q/-s and exactly one -F - (git reads
+                        # the message from stdin to EOF, so no editor or hook is left anything
+                        # to read), then the heredoc and nothing after it. Any other word, a
+                        # clustered option or -- included, keeps the body in the scan.
+                        head = raw[3:] if raw[1:2] == ['-C'] and len(raw) > 3 else raw[1:]
+                        rest = raw[k + (1 if t[3 if strip_tabs else 2:] else 2):]
+                        args, n, stdin = head[1:k - (len(raw) - len(head))], 0, 0
+                        plain = head[:1] == ['commit'] and not rest
+                        while plain and n < len(args):
+                            if args[n] in ('-F-', '--file=-'):
+                                stdin, n = stdin + 1, n + 1
+                            elif args[n] in ('-F', '--file') and args[n + 1:n + 2] == ['-']:
+                                stdin, n = stdin + 1, n + 2
+                            elif args[n] in ('-q', '--quiet', '-s', '--signoff'):
+                                n += 1
+                            else:
+                                plain = False
+                        if quoted and raw[0].rsplit('/', 1)[-1] == 'git' and plain and stdin == 1:
+                            ends = (tabbed if strip_tabs else exact).get(spec[1:-1], [])
+                            e = bisect.bisect_left(ends, i)
+                            if e < len(ends):
+                                i = ends[e] + 1
+                        done = True
+                        break
+                    if done:
+                        break
+            return chr(10).join(out)
+        def runs_review_loop(c, depth=0):
+            c = drop_git_heredoc_bodies(c)
+            for _op, seg in split_segments(c):
+                for w in _tokenize(seg):
+                    w = w.strip('(){}')
+                    if w.rsplit('/', 1)[-1] == 'git':
+                        break
+                    if _is_exe(w, 'run-review-loop.sh'):
+                        return True
+                    if any(ch.isspace() for ch in w) and depth < 3 and runs_review_loop(w, depth + 1):
+                        return True
+            return False
+        # Decided before anything is printed: a raise here must reach the 'error'
+        # frame below, not land 'error' on line 6 after five good fields.
+        runs_rrl = runs_review_loop(cmd)
         print('yes')
         print(target_dir)
         print('1' if is_amend else '0')
         print(cwd)
         print(untrusted_cd)
+        print('1' if runs_rrl else '0')
 except Exception:
     # Fail-CLOSED: fast pre-filter matched git commit pattern but parser
     # failed. Print sentinel so bash can block rather than silently approve.
     print('error')
+    print('')
     print('')
     print('')
     print('')
@@ -241,6 +341,7 @@ IS_AMEND=$(echo "$PARSE_RESULT" | sed -n '3p')
 HOOK_CWD=$(echo "$PARSE_RESULT" | sed -n '4p')
 # The cd operand that did NOT '&&'-gate the commit (see gitcmd_detect._untrusted_cd).
 UNTRUSTED_CD=$(echo "$PARSE_RESULT" | sed -n '5p')
+RUNS_REVIEW_LOOP=$(echo "$PARSE_RESULT" | sed -n '6p')
 
 # Fail-closed: parser error after fast pre-filter matched → block as precaution
 if [ "$IS_GIT_COMMIT" = "error" ]; then
@@ -261,6 +362,21 @@ fi
 # Genuinely not in a git repo → nothing to review (git commit fails on its own).
 [ "$GATE_RESOLVE_STATUS" = "outside-repo" ] && exit 0
 REPO_DIR="$GATE_REPO_DIR"
+
+# ── #887: commit and review loop in one Bash call ─────────────────────
+# post-commit-consume-marker.sh runs after the WHOLE call and spends the marker it
+# finds there. When the call also runs the review loop, that marker can be a fresh
+# PASS for the NEXT staged change, which is then lost (and the commit recorded as
+# reviewed by it). The post hook cannot tell that marker from one a pathspec commit
+# left matching the index, so keeping it there would make every marker replayable.
+# Refusing the shape here keeps the PASS the operator holds and costs one split call.
+# A missed detection only reproduces the old lost PASS; it never approves anything.
+if [ "$RUNS_REVIEW_LOOP" = "1" ]; then
+    # block_emit, not gate_record_block_and_emit: this runs before the skip-litmus
+    # handler, so the circuit breaker's skip-file advice could not clear it.
+    block_emit "Pre-commit gate: this Bash call runs git commit AND run-review-loop.sh. The post-commit hook spends the review marker after the whole call, so a PASS written by that review would be consumed by this commit (#887). Commit in its own Bash call, then run the review in the next one. Nothing has run, so the marker you hold is unchanged."
+    exit 0
+fi
 
 # ── Is a merge actually in progress? ──────────────────────────────────
 # NOT `git rev-parse MERGE_HEAD`: that is revision-name resolution, and it
