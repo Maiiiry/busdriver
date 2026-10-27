@@ -1,3 +1,10 @@
+## [3.0.10](https://github.com/chris-yyau/busdriver/compare/v3.0.9...v3.0.10) (2026-10-27)
+
+
+### Bug Fixes
+
+* **review:** record [#803](https://github.com/chris-yyau/busdriver/issues/803) as the closure of the session-env residual ([#570](https://github.com/chris-yyau/busdriver/issues/570)) ([#1044](https://github.com/chris-yyau/busdriver/issues/1044)) ([c9ccea7](https://github.com/chris-yyau/busdriver/commit/c9ccea76c496ffd239bfa2c457059e259bcba405)), closes [#325](https://github.com/chris-yyau/busdriver/issues/325)
+
 ## [3.0.9](https://github.com/chris-yyau/busdriver/compare/v3.0.8...v3.0.9) (2026-10-27)
 
 
