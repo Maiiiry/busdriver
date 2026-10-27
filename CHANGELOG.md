@@ -1,3 +1,10 @@
+## [3.0.8](https://github.com/chris-yyau/busdriver/compare/v3.0.7...v3.0.8) (2026-10-27)
+
+
+### Bug Fixes
+
+* **pre-commit:** refuse a Bash call that commits and runs the review loop ([#887](https://github.com/chris-yyau/busdriver/issues/887)) ([#1042](https://github.com/chris-yyau/busdriver/issues/1042)) ([90143be](https://github.com/chris-yyau/busdriver/commit/90143be74e83c7367eddc968f1200007b52cae12))
+
 ## [3.0.7](https://github.com/chris-yyau/busdriver/compare/v3.0.6...v3.0.7) (2026-10-26)
 
 
