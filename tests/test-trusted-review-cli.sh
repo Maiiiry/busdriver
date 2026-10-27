@@ -254,11 +254,13 @@ fi
 # ultra_oracle_attach_preflight.sh). Each entry point therefore rebuilds its
 # environment once via `env -u`. Behavioural and TRANSITIVE: lift the real
 # BD803-CLEAN-ENV block out of each entry point, run a plain-shebang helper behind it,
-# and require that helper not to import a forged BASH_FUNC_python3. A deleted or
-# renamed block yields no block and the helper imports the forgery.
+# and require that helper not to import a forged BASH_FUNC_python3, BASH_FUNC_jq or
+# BASH_FUNC_source (#570 names the last two: jq reads every review verdict, and a
+# shadowed `source` replaces whole libraries). A deleted or renamed block yields no
+# block and the helper imports the forgery.
 DOWNSTREAM="$WORK/downstream-helper.sh"
 # shellcheck disable=SC2016  # probe text: expanded by the probe, not here
-printf '#!/bin/bash\n[ "$(type -t python3 2>/dev/null)" = function ] && echo IMPORTED_FORGERY || echo downstream_clean\n' > "$DOWNSTREAM"
+printf '#!/bin/bash\nfor f in python3 jq source; do [ "$(type -t "$f" 2>/dev/null)" = function ] && { echo "IMPORTED_FORGERY:$f"; exit 0; }; done; echo downstream_clean\n' > "$DOWNSTREAM"
 chmod 755 "$DOWNSTREAM"
 transitive_bad=""
 while IFS= read -r _ep; do
@@ -279,14 +281,29 @@ while IFS= read -r _ep; do
   } > "$_probe"
   chmod 755 "$_probe"
   set +e
-  _out=$(env "BASH_FUNC_python3%%=() { printf FORGED\n; }" "$_probe" "$DOWNSTREAM" 2>/dev/null)
+  _out=$(env "BASH_FUNC_python3%%=() { printf FORGED\n; }" "BASH_FUNC_jq%%=() { printf FORGED\n; }" \
+    "BASH_FUNC_source%%=() { :; }" "$_probe" "$DOWNSTREAM" 2>/dev/null)
   set -e
   [[ "$_out" == *downstream_clean* ]] || transitive_bad="${transitive_bad}${_ep} -> ${_out:-<no output>}"$'\n'
 done <<< "$hardened_list"
 if [[ -z "$transitive_bad" ]]; then
   ok "#803: entry points rebuild the environment so plain-shebang descendants stay clean"
 else
-  bad "#803: descendant imported a forged BASH_FUNC_python3:"$'\n'"$transitive_bad"
+  bad "#803: descendant imported a forged BASH_FUNC_python3/jq/source:"$'\n'"$transitive_bad"
+fi
+# #570: the control. Without a clean-env block in front, the same helper MUST see each
+# forgery, or the assertion above could pass on a helper that never detects one.
+control_bad=""
+for _fn in python3 jq source; do
+  set +e
+  _out=$(env "BASH_FUNC_${_fn}%%=() { :; }" "$DOWNSTREAM" 2>/dev/null)
+  set -e
+  [[ "$_out" == "IMPORTED_FORGERY:${_fn}" ]] || control_bad="${control_bad}${_fn} -> ${_out:-<no output>} "
+done
+if [[ -z "$control_bad" ]]; then
+  ok "#570: control — with no clean-env block the helper imports each forgery"
+else
+  bad "#570: control — the helper did not detect a forgery it was given: $control_bad"
 fi
 
 # #803: env-list parsing must not depend on a writable TMPDIR here-string temporary.
