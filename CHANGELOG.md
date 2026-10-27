@@ -1,3 +1,10 @@
+## [3.0.12](https://github.com/chris-yyau/busdriver/compare/v3.0.11...v3.0.12) (2026-10-27)
+
+
+### Bug Fixes
+
+* make the shell suites pass on ubuntu-26.04, including an atomic --continue lock ([#1000](https://github.com/chris-yyau/busdriver/issues/1000)) ([#1045](https://github.com/chris-yyau/busdriver/issues/1045)) ([45ea945](https://github.com/chris-yyau/busdriver/commit/45ea945dbe59fdfb7c2fc20c275eb892b2bdc1ae))
+
 ## [3.0.11](https://github.com/chris-yyau/busdriver/compare/v3.0.10...v3.0.11) (2026-10-27)
 
 
