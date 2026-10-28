@@ -1,3 +1,10 @@
+## [3.0.13](https://github.com/chris-yyau/busdriver/compare/v3.0.12...v3.0.13) (2026-10-28)
+
+
+### Bug Fixes
+
+* **gate:** read an escaped $ before a quote as a literal dollar ([#1048](https://github.com/chris-yyau/busdriver/issues/1048)) ([#1050](https://github.com/chris-yyau/busdriver/issues/1050)) ([01c8f13](https://github.com/chris-yyau/busdriver/commit/01c8f133c11542f491d14dd31c5e0f5f588be26a)), closes [#1051](https://github.com/chris-yyau/busdriver/issues/1051)
+
 ## [3.0.12](https://github.com/chris-yyau/busdriver/compare/v3.0.11...v3.0.12) (2026-10-27)
 
 
